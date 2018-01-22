@@ -1,54 +1,75 @@
-# AoC 13
+# AoC 22
 import math
-import numpy as np
-file = open("input_13.txt",'r')
+file = open("input_22.txt",'r')
 #file = open("tmp.txt",'r')
 
-lines = file.readlines()
-nrofLayers = 99
-#nrofLayers = 7
+lines = [line.rstrip() for line in file.readlines()]
 
-layer = np.zeros(nrofLayers)
-scanners_depth = [0 for x in range(nrofLayers)]
-for line in lines:
-    elem = [int(x.strip()) for x in line.split(': ')]
-    layer[elem[0]] = elem[1]
-
-caught = 0
-index_0 = np.where(layer > 0)[0]
-
-for pos in range(nrofLayers):
-    if(scanners_depth[pos]==0):
-        caught += pos*layer[pos]
-    scan_movement = np.zeros(nrofLayers)
-
-    scan_movement[index_0] = [1 if (math.floor((pos/(layer[x]-1))) % 2) == 0 else -1 for x in index_0]
-    scanners_depth += scan_movement
-print("A = ",int(caught))
+gridSize = 501
+grid = [['.' for i in range(gridSize)] for j in range(gridSize)]
+gridB = [['.' for i in range(gridSize)] for j in range(gridSize)]
 
 
-delay = 0
-scanners_depth_delay = [0 for x in range(nrofLayers)]
 
-while True:
-    caught = False
-    if(delay>0):
-        scan_movement = np.zeros(nrofLayers)
-        scan_movement[index_0] = [1 if (math.floor(((delay-1) / (layer[x] - 1))) % 2) == 0 else -1 for x in index_0]
-        scanners_depth_delay += scan_movement
-    scanners_depth = list(scanners_depth_delay)
+nrofCols = lines[0].__len__()
+nrofRows = lines.__len__()
 
-    for pos in range(nrofLayers):
-        if (scanners_depth[pos] == 0) and (layer[pos]>0):
-            caught = True
-            break
-        scan_movement = np.zeros(nrofLayers)
-        scan_movement[index_0] = [1 if (math.floor(((delay + pos) / (layer[x] - 1))) % 2) == 0 else -1 for x in index_0]
-        scanners_depth += scan_movement
-    if(not caught):
-        break
-    delay+=1
-    if(delay%10000 == 0 ):
-        print(delay)
+startC = int((gridSize-1) / 2 - (nrofCols-1)/2)
+startR = int((gridSize-1) / 2 - (nrofRows-1)/2)
+for c in range(startC,startC+nrofCols):
+    for r in range(startR,startR+nrofRows):
+        grid[r][c]  = lines[r - startR][c - startC]
+        gridB[r][c] = lines[r - startR][c - startC]
 
-print("B ",delay)
+pos_x = int((gridSize-1) / 2)
+pos_y = int((gridSize-1) / 2)
+
+bursts = 10000
+dir = 0
+infected = 0
+for b in range(bursts):
+   # print(pos_x,pos_y)
+    turn = 'r' if grid[pos_x][pos_y]=='#' else 'l'
+    grid[pos_x][pos_y] = '#' if grid[pos_x][pos_y] == '.' else '.'
+
+    # move
+    dir += 90 if turn =='r' else -90
+    if(grid[pos_x][pos_y] =='#'):
+        infected += 1
+    pos_x -= int(math.cos((dir/180)*math.pi))
+    pos_y += int(math.sin((dir / 180) * math.pi))
+
+print(" A = ",infected)
+
+## Solve B
+pos_x = int((gridSize-1) / 2)
+pos_y = int((gridSize-1) / 2)
+
+bursts = 10000000
+dir = 0
+infected_b = 0
+for b in range(bursts):
+    nextGrid = ''
+
+    if gridB[pos_x][pos_y]=='#':
+        dir += 90
+        nextGrid = 'F'
+
+    elif gridB[pos_x][pos_y]=='.':
+        dir -= 90
+        nextGrid = 'W'
+
+    elif gridB[pos_x][pos_y]=='F':
+        dir += 180
+        nextGrid = '.'
+    else:
+        nextGrid = '#'
+
+    gridB[pos_x][pos_y] = nextGrid
+
+    if(gridB[pos_x][pos_y] =='#'):
+        infected_b += 1
+    pos_x -= int(math.cos((dir/180)*math.pi))
+    pos_y += int(math.sin((dir / 180) * math.pi))
+
+print('Infected B ',infected_b)
